@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Phani.CancellationToken.Controllers
@@ -24,21 +25,29 @@ namespace Phani.CancellationToken.Controllers
         }
 
         [HttpGet]
-        public async Task<IEnumerable<WeatherForecast>> Get()
+        public async Task<IEnumerable<WeatherForecast>> Get(CancellationToken token = default)
         {
-            Console.WriteLine("Get the forecast request");
-            await Task.Delay(3000);
-            Console.WriteLine("Request is processing");
-            var rng = new Random();
-            var result = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            try
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            })
-            .ToArray();
-            Console.WriteLine($"Total records: " + result.Length);
-            return result;
+                Console.WriteLine("Get the forecast request");
+                await Task.Delay(3000, token);
+                Console.WriteLine("Request is processing");
+                var rng = new Random();
+                var result = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+                {
+                    Date = DateTime.Now.AddDays(index),
+                    TemperatureC = rng.Next(-20, 55),
+                    Summary = Summaries[rng.Next(Summaries.Length)]
+                })
+                .ToArray();
+                Console.WriteLine($"Total records: " + result.Length);
+                return result;
+            }
+            catch (TaskCanceledException exc)
+            {
+                throw;
+            }
+
         }
     }
 }
